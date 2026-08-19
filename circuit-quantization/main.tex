@@ -212,19 +212,41 @@ n_\mathrm{ZPF} &= \left(\frac{E_L}{32 E_C}\right)^{1/4}
 \section{Generalizing the oscillator basis}
 Recall that the creation and annihilation operators were specified by their commutation relation, not by the quantum harmonic oscillator Hamiltonian. They just happened to be \textit{useful} for the quantum harmonic oscillator Hamiltonian. However, for \textit{any} circuit node we can define creation and annihilation operators in terms of the node flux and charge, we just need to get the prefactors correct. Doing this is equivalent to writing these operators in the basis of harmonic oscillator states, as these node creation/annihilation operators act in a known way on the harmonic oscillator states, even though those may not be eigenstates. 
 
-We have brushed off the problem of getting the operator prefactors correct, which will turn out to be very important. But there is an even more fundamental issue we need to address first. We are writing these oscillator creation/annihilation operators that add or remove energy from a harmonic mode. But \textit{which mode?}. A complicated circuit may have many resonant modes of oscillation. We could pretend that each node of the circuit has its own mode. But that is often a terrible place to start, as modes can involve coupled oscillation of many nodes. Instead we're better off finding the modes \textit{first}. If everything in the circuit is linear, each of these modes acts like its own quantum harmonic oscillator. They are \textit{normal modes} (in the sense of ``normal'' meaning ``perpendicular''), meaning that the classical oscillation amplitude of one does not affect any of the others, and thus the quantum mechanical energy state of one does not affect the others. We can then treat them each as an uncoupled harmonic oscillator and write its creation/annihilation operators as we would for a single oscillator.
+We have brushed off the problem of getting the operator prefactors correct, which will turn out to be very important. But there is an even more fundamental issue we need to address first. We are writing these oscillator creation/annihilation operators that add or remove energy from a harmonic mode. But \textit{which mode?}. A complicated circuit may have many resonant modes of oscillation. We could pretend that each node of the circuit has its own mode. But that is often a terrible place to start, as modes can involve coupled oscillation of many nodes. Instead we're better off finding the modes \textit{first}. If everything in the circuit is linear, each of these modes acts like its own quantum harmonic oscillator. They are \textit{normal modes} (``normal'' meaning ``perpendicular'' in this conext), meaning that the classical oscillation amplitude of one does not affect any of the others, and thus the quantum mechanical energy state of one does not affect the others. We can then treat each mode as an uncoupled harmonic oscillator and write its creation/annihilation operators as we would for a single oscillator.
 
 Luckily, there are ways to determine the normal modes of a circuit, and in fact we can immediately read off how many there are. Recall that we defined the number of nodes in the circuit using a capacitive spanning tree. Each of those nodes, by definition, was connected to at least one capacitor. If a node is also connected to at least one inductor, then we call it an \textit{active node}. If that was the only non-ground node, there would be a parallel LC connecting it to ground, and thus a harmonic oscillator mode. We can make this same argument for every active node in the circuit. Adding more nodes to the circuit can't reduce the number of normal modes, although they can be degenerate (this is a classical mechanics result that we will not prove again here). Essentially, each active node we add gives us a new degree of freedom, and these map onto the normal degrees of freedom of the normal modes. However, Kirchoff's laws constrain the degrees of freedom so that passive nodes (that are connected only to capacitors) do not contribute new modes, and adding more branches to the circuit does not change the number of modes if the number of active nodes is unchanged. Therefore, \textit{a linear circuit with $M$ active nodes will have $M$ normal modes}. Note that we could have done an inductive spanning tree in the first place and the argument would be the same, except that the passive nodes would have only inductive connections.
 
 As we learned in classical mechanics, given a system of masses on springs with generalized coordinates $x_i$ and generalized momenta $p_i$, we can find its normal modes and write it in terms of new coordinates $\tilde{x}_i, \ \tilde{p}_i$. These new coordinates belong only to a single mode, i.e., adding energy to the $i$th mode will increase the oscillation amplitude of $\tilde{x}_i$ and $\tilde{p}_i$ but will not affect $\tilde{x}_j, \ \tilde{p}_j$ at all. We can do the same for a circuit! Here's how:
 
 \subsection{Normal mode analysis}
-Let's go back to a classical oscillator and assume that we will have harmonic oscillator modes. In such a mode, the node fluxes will oscillate, so we can write the ansatz
-\begin{equation}
-\vec{\Phi}(t) = \vec{\Phi}_0 e^{i\omega t}
-\end{equation}
-We can use the Euler-Lagrange equations to find the equations of motion:
+Let's go back to a classical circuit, and for now let's pretend we don't have any loops in the circuit so that it's easy to write down the Lagrangian. We can use the Euler-Lagrange equations to find the equations of motion:
 
+\begin{align}
+\frac{d}{dt} \frac{\partial \mathcal{L}(\vec{\Phi},\dot{\vec{\Phi}},t)}{\partial \dot{\Phi_i}} - \frac{\partial \mathcal{L}(\vec{\Phi},\dot{\vec{\Phi}},t)}{\partial \Phi_i} &=0 \\
+\mathbf{L^{-1}}\vec{\Phi} + \mathbf{C}\ddot{\vec{\Phi}} &=0
+\end{align}
+
+Here we have again used the fact that the inductance and capacitance matrices are symmetric. In a harmonic normal mode, the node fluxes will oscillate, so we can write the ansatz
+\begin{equation}
+\vec{\Phi}(t) = \vec{\Phi}_m e^{i\omega t}
+\end{equation}
+
+Plugging this into the equations of motion gives:
+\begin{equation}
+\mathbf{L^{-1}}\vec{\Phi}_m = \omega^2 \mathbf{C}\vec{\Phi}_m 
+\end{equation}
+We see that this becomes a generalized eigenvalue problem. Since we earlier made sure the capacitance matrix was invertible, we can make the eigenvalue problem even more explicit:
+\begin{align}
+\mathbf{C^{-1}}\mathbf{L^{-1}}\vec{\Phi}_m &=\omega^2 \vec{\Phi}_m
+\end{align}
+So we have a mode with frequency $\omega$ that has phase oscillations with complex amplitudes given by $\vec{\Phi}_m$, where $\omega^2$ is an eigenvalue of $\mathbf{\Omega}\equiv\mathbf{C^{-1}}\mathbf{L^{-1}}$ and $\vec{\Phi}_m$ is the corresponding eigenvector. Recall that we have a mode for each active node of the circuit. In practice, any node connected only by capacitance (any \textit{passive} node) can be eliminated from the circuit by just adding the capacitances to the next active node in series. So let's assume we have $n$ nodes and $n$ normal modes. We can then diagonalize $\mathbf{\Omega}$ in the usual way:
+\begin{equation}
+\mathbf{\tilde{\Omega}} = \mathbf{N^{-1} \Omega N}
+\end{equation}
+Here $\mathbf{N}$ is a matrix whose columns are the $\vec{\Phi}_m$, the eigenvectors of $\mathbf{\Omega}$ in the original node flux basis. One can do the same transform to $\mathbf{L^{-1}}$ and $\mathbf{C}$, which will also become diagonal (they had better, because the whole point of normal modes is that the Lagrangian has no interactions between them). This allows us write the Lagrangian in the new \textit{mode} flux coordinates:
+\begin{equation}
+\mathcal{L}(\tilde{\vec{\Phi}}, \dot{\tilde{\vec{\Phi}}},t) = \frac{1}{2}\dot{\tilde{\vec{\Phi}}}^\top \mathbf{\tilde{C}}\dot{\tilde{\vec{\Phi}}} - \frac{1}{2}\tilde{\vec{\Phi}}\mathbf{L^{-1}}\tilde{\vec{\Phi}}
+\end{equation}
 
 \section{Quantizing a distributed mode}
 \label{sec:distributedQuant}
