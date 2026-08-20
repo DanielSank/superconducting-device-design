@@ -288,6 +288,7 @@ Quantizing a circuit like this can be performed by using the mode operators as b
 The above analysis was all done assuming we had been given a lumped-element circuit model. This is, of course, impossible: a truly lumped element has 0 size and thus cannot exist. It can be a good approximation if the element's size is much less than the wavelength of the fields we are worried about. However, this approximation breaks down if we want a larger element, if we work at a higher frequency, or if we have a transmission line or cavity that is fundamentally a distributed object. In this case there are a few different approaches one can take to circuit quantization. 
 
 \subsection{Lumped oscillator model}
+\label{sec:LOM}
 In practice, the distributed elements we need to worry about will often be transmission line resonators. In that case we can model each resonant mode as a parallel $LC$ circuit. Consider a section of transmission line of length $\ell$ whose ends are either open (infinite impedance to ground) or shorted (0 impedance to ground). If both ends are shorted or both open, then the lowest-frequency resonant mode has wavelength $\lambda$ such that $\ell = \lambda/2$; if one end is shorted and the other is open, $\ell = \lambda/4$. We call these half-wave and quarter-wave resonators, respectively. 
 
 Let's say we have a small capacitor at the end of a resonator, i.e., it is approximately open on that end. To calculate things we care about like coupling strengths, we will need to know the voltage oscillation on the capacitor---that is, the fraction of the total voltage drop that occurs across this capacitor (as opposed to the rest of the distributed capacitance). So any equivalent circuit we use must reproduce this voltage oscillation. It also must contain the same total energy as the transmission line resonator for a given voltage. So we set the voltage on the equivalent circuit to be the same as the voltage at the end of the transmission line, and equate the energies. This gives
@@ -327,11 +328,24 @@ One can perform the exact same calculation for inductive coupling, setting the c
 \end{equation}
 We can immediately see an inconsistency: $L^\mathrm{cap}_\mathrm{eff} \neq L^\mathrm{ind}_\mathrm{eff}$ ! That is, the effective inductance we get when calculating an equivalent circuit for inductive coupling is different from the one we get when calculating for capacitive coupling. This is not an error in our calculation, rather it is a fundamental limitation of this method. In practice, one typically treats the transmission line as if it has coupling only on one end, finds all the circuit quantities one wants for that end (e.g., coupling strength to a qubit), then does the same on the other end with a new equivalent circuit. This approach breaks down when coupling on either end is strong, as that loads the transmission line and distorts the sinusoidal voltage and current oscillation.
 
-One can find a self-consistent equivalent circuit by modeling the transmission line with the inductive/capacitive couplings on both ends as a black-box network with impedance $Z(\omega)$, then finding an $LC$ circuit with the same coupling inductance/capacitance that best matches this impedance. In practice this method can be more accurate but is still limited, as it cannot perfectly match impedance over a broad frequency range and cannot handle cases such as couplings partway down the transmission line. In that case other approaches are called for.
+One can find a self-consistent equivalent circuit by modeling the transmission line with the inductive/capacitive couplings on both ends as a black-box network with impedance $Z(\omega)$, then finding an $LC$ circuit with the same coupling inductance/capacitance that best matches this impedance. In practice this method can be more accurate but is still limited, as it cannot perfectly match impedance over a broad frequency range and cannot handle cases such as couplings partway down the transmission line. Furthermore, a device another type of resonator such as a 3D cavity does not nicely fit into this framework. In those cases other approaches are called for.
 
 \subsection{Black box quantization}
+\label{sec:blackbox}
+Consider a circuit with many linear elements and a single Josephson junction. Some linear elements may be distributed resonators or cavities. Even if there is no simple lumped-element equivalent circuit, it is straightforward to find the impedance of the linear circuit from any port to any other port. Consider the JJ as a two-port device that couples to the linear circuit at two ports. The impedance between those ports gives the relationship between junction voltage and current, but it includes the junction itself. We can simplify matters greatly by separating out the linear part of the Josephson inductance from the nonlinear part. The contribution to the energy is quite simple to write:
+\begin{align}
+	E^\mathrm{JJ} &= E^\mathrm{JJ}_\mathrm{lin} + E^\mathrm{JJ}_\mathrm{nonlin} \\
+	E^\mathrm{JJ}_\mathrm{lin} &= \frac{1}{2}E_J \phi^2 \\
+	E^\mathrm{JJ}_\mathrm{nonlin} &= E_J (1 - \cos\phi - \frac{1}{2}\phi^2)	
+\end{align}
+We haven't done anything fancy here, just added and subtracted $E_J \phi^2/2$, but in doing so we have now defined a linear inductance plus a purely nonlinear element. (DOES THIS HAVE A NAME ALREADY?)
+
+We can remove the nonlinear element and treat the rest of the circuit (including the linear inductance from the JJ) as a \textit{black box} with two ports that the nonlinear element will span. We can then calculate the impedance between these ports $Z(\omega)$. This calculation can be analytical or a simple numerical circuit simulation if the rest of the circuit elements have simple geometries, but in general may require a full-wave electromagnetic simulation of the physical device geometry. 
+
+Once the impedance is known, the black box circuit can be replaced by an equivalent lumped-element circuit network that reproduces the same $Z(\omega)$ across those ports. 
 
 \subsection{Energy participation ratio}
+
 
 \section{Time-dependent drives}
 
