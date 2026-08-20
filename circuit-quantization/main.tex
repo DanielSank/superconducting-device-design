@@ -1,4 +1,5 @@
 \levelstay{Circuit Quantization}
+\label{ch:circuitquant}
 So far we have discussed how circuits work from a classical perspective, and how quantum mechanics works in general. Recall that our overall goal is to make a superconducting circuit device supporting quantum operations. In order to do that, we first examined how circuits work classically, then covered quantum mechanics generally. It is now time to look at how circuits work from a \textit{quantum} perspective. We will start from the very basic behavior of a circuit and go through a fairly involved process to eventually derive a quantum circuit Hamiltonian. Often, one can skip straight to the quantum Hamiltonian, and so this work would appear unnecessary. The reader may be tempted to skip to the results of this chapter. However, this can be a trap---drives and finite size effects can lead to different Hamiltonians that only become apparent if one starts from the basic behavior (CITE JENS). We also note that circuit quantization is still an area of active research. In particular, researchers are still working to develop the best treatments of time-dependent fields and finite-size circuit elements (CITE YAO LU).
 
 Much of this chapter derives from excellent notes published by Devoret and Vool (CITE) and we gratefully acknowledge their work.
@@ -78,10 +79,10 @@ If the flux bias is constant, we can just assign the flux bias to the inductive 
 
 \begin{equation}
 \label{eq:Eindclosure}
-  E_{\mathrm{closure},ij}^\mathrm{ind} = \frac{(\Phi_i-\Phi_j-\Phi_{\mathrm{ext},ij})^2}{2L_{ij}}
+  E_{\mathrm{closure},ij}^\mathrm{ind} = \frac{(\Phi_i-\Phi_j-\Phi_{\mathrm{ext},ij})^2}{2L_{\mathrm{closure},ij}}
 \end{equation}
 
-It is possible to write this in a matrix form, but in our experience it takes more effort to figure out how to properly arrange the matrix than it would to just write out every term individually.  Instead we will simply add all these terms to \cref{eq:matrixEind} and call the result $U_\mathrm{ind}(\vec{\Phi}, \vec{\Phi}_\mathrm{ext})$.
+It is possible to write this in a matrix form, especially if there is only ever 1 additional inductive branch spanning between two nodes (i.e., 2 inductors total), but in our experience it takes more effort to figure out how to properly arrange the matrix than it would to just write out every term individually.  Instead we will simply add all these terms to \cref{eq:matrixEind} and call the result $U_\mathrm{ind}(\vec{\Phi}, \vec{\Phi}_\mathrm{ext})$.
 
 
 
@@ -191,7 +192,7 @@ Here we have defined the dimensionless node charge number operator $\hat{n}$ as 
 \end{equation}
 The negative sign in the definition of $\hat{n}$ is a convention, and if we had not put it in there then \cref{eq:nphicommutation} would not have its negative sign. Importantly, not all authors follow the same convention --- be extra careful about the definition, as negative signs are easy to lose track of!
 
-Changing to these dimensioless operators gives the Hamiltonian
+Changing to these dimensionless operators gives the Hamiltonian
 \begin{equation}
 \label{eq:LCHamiltoniandimensionless}
 \hat{H} = 4E_C \hat{n}^2 +\frac{1}{2}E_L \hat{\phi}^2
@@ -219,7 +220,9 @@ Luckily, there are ways to determine the normal modes of a circuit, and in fact 
 As we learned in classical mechanics, given a system of masses on springs with generalized coordinates $x_i$ and generalized momenta $p_i$, we can find its normal modes and write it in terms of new coordinates $\tilde{x}_i, \ \tilde{p}_i$. These new coordinates belong only to a single mode, i.e., adding energy to the $i$th mode will increase the oscillation amplitude of $\tilde{x}_i$ and $\tilde{p}_i$ but will not affect $\tilde{x}_j, \ \tilde{p}_j$ at all. We can do the same for a circuit! Here's how:
 
 \subsection{Normal mode analysis}
-Let's go back to a classical circuit, and for now let's pretend we don't have any loops in the circuit so that it's easy to write down the Lagrangian. We can use the Euler-Lagrange equations to find the equations of motion:
+Let's go back to a classical circuit, and for now let's pretend we don't have any flux bias in the circuit so that it's easy to write down the Lagrangian--we'll incorporate the closure branches (the inductors that close loops) directly into the inductance matrix. If an inductor is parallel to another that was already included in the matrix, we just modify that inductance to be the parallel combination of the two inductors. If it connects two nodes that weren't already connected in the original spanning tree, we now simply include that connection in the inductance matrix.
+
+We can use the Euler-Lagrange equations to find the equations of motion:
 
 \begin{align}
 \frac{d}{dt} \frac{\partial \mathcal{L}(\vec{\Phi},\dot{\vec{\Phi}},t)}{\partial \dot{\Phi_i}} - \frac{\partial \mathcal{L}(\vec{\Phi},\dot{\vec{\Phi}},t)}{\partial \Phi_i} &=0 \\
@@ -245,16 +248,90 @@ So we have a mode with frequency $\omega$ that has phase oscillations with compl
 \end{equation}
 Here $\mathbf{N}$ is a matrix whose columns are the $\vec{\Phi}_m$, the eigenvectors of $\mathbf{\Omega}$ in the original node flux basis. One can do the same transform to $\mathbf{L^{-1}}$ and $\mathbf{C}$, which will also become diagonal (they had better, because the whole point of normal modes is that the Lagrangian has no interactions between them). This allows us write the Lagrangian in the new \textit{mode} flux coordinates:
 \begin{equation}
-\mathcal{L}(\tilde{\vec{\Phi}}, \dot{\tilde{\vec{\Phi}}},t) = \frac{1}{2}\dot{\tilde{\vec{\Phi}}}^\top \mathbf{\tilde{C}}\dot{\tilde{\vec{\Phi}}} - \frac{1}{2}\tilde{\vec{\Phi}}\mathbf{L^{-1}}\tilde{\vec{\Phi}}
+\mathcal{L}(\tilde{\vec{\Phi}}, \dot{\tilde{\vec{\Phi}}},t) = \frac{1}{2}\dot{\tilde{\vec{\Phi}}}^\top \mathbf{\tilde{C}}\dot{\tilde{\vec{\Phi}}} - \frac{1}{2}\tilde{\vec{\Phi}}\mathbf{\tilde{L}^{-1}}\tilde{\vec{\Phi}}
 \end{equation}
+From this point we can define the \textit{mode} charge $\tilde{\vec{q}} = \partial\mathcal{L}/\partial\dot{\tilde{\vec{\Phi}}}$ and use the Legendre transform to get the Hamiltonian. The mode charge and flux are canonically conjugate so we are left with a system of uncoupled harmonic oscillators, which we can then turn into quantum harmonic oscillators just as we did for the single isolated oscillator.
+
+If we do have flux biases, this procedure is still possible---the circuit will have $n$ normal modes regardless---it just becomes more difficult. For more information on finding the normal modes in the presence of flux bias, see CITE KERMAN.
+
+\section{Nonlinear circuit elements}
+As we will see in REFER TO SC CHAP, virtually every superconducting quantum device relies on a nonlinear circuit element, the \textit{Josephson junction} (JJ). We will leave the physics of how JJs behave in general for REFER TO SC CHAP. For now we will concern ourselves only with their contribution to the energy of a circuit
+\begin{equation}
+	\label{eq:EJJbranch}
+	E^\mathrm{JJ} = E_{J,b} (1 - \cos \phi_b)
+\end{equation}
+Here $E_{J,b}$ is a constant indicating the energy scale of the JJ that forms the circuit branch $b$, and $\phi_b = \Phi_b / (\hbar / 2 e) = \Phi_b / \varphi_0$ is the branch flux in units of the reduced flux quantum $\varphi_0$.
+
+It is instructive to look at the power series expansion of this energy:
+\begin{equation*}
+	E^\mathrm{JJ} = E_{J,b}\left(\frac{1}{2}\phi_b^2 - \frac{1}{4!}\phi_b^4 + \frac{1}{6}\phi_b^6...\right)
+\end{equation*}
+We see that the first term is exactly what we would have gotten from a linear inductor with $E_L$ equal to $E_J$. We can say that the JJ is acting as a \textit{nonlinear} inductor with inductance $\varphi_0^2/(E_J\cos\phi_b)$. 
+
+The nonlinearity of the JJ energy does not affect our earlier procedure to define the node flux, since that relied only on the behavior of capacitive elements.\footnote{If we had nonlinear \textit{capacitive} elements we would be in trouble. Such elements exist, and in particular there is a useful but difficult-to-make element known as a \text{quantum phase slip junction} (QPSJ) that has energy that depends on the cosine of charge. If one has linear inductance and capacitance along with QPSJs, one must use the method of loops and define loop charge as the "position" variable. If one has both nonlinear capacitance and inductance (QPSJs and JJs) then things are even more complicated; for a fuller treatment see REFER TO SYMPLECTIC GEO PAPERS.} So we can rewrite the energy of a JJ branch between nodes $i$ and $j$ as 
+\begin{equation}
+	\label{eq:EJJnode}
+	E^\mathrm{JJ}_{ij,b} = E_{J,ij,b}\left[1-\cos\left(\phi_i-\phi_j + \phi_{\mathrm{ext},b}\right) \right]
+\end{equation}
+where $\phi_{\mathrm{ext},b}$ is the external flux bias that we are assigning to this branch in units of the reduced flux quantum. 
+
+If the $E_J$ is large, then low-energy states of the circuit will have a very small flux difference across the junction. In this regime the cosine is approximately quadratic and the junction can be approximated as a linear inductor with inductance $\varphi_0^2/E_J$. One can use this linear approximation to solve for the normal modes of the system, then rewrite the nonlinear Josephson energy terms in terms of these mode operators. Unlike in the case of linear inductance, this will not lead to a simple diagonal expression, because the nonlinearity of the junctions prevent an easy matrix diagonalization. Instead each Josephson term will contain several mode operators:
+\begin{equation*}
+	E^{\mathrm{JJ}}_b = E_{J,b}\left[1-\cos\left(\sum_m a_m\phi_m +\phi_{\mathrm{ext},b}\right)\right]
+\end{equation*}
+where the sum is over mode operators and the coefficients $a_m$ indicate how much flux each mode operator has on that branch. Expanding this in a power series will diagonalize the linear terms (i.e. only quadratic terms involving a single mode operator will survive) but the higher-order terms will retain multiple mode operators. The nonlinearity means \textit{the modes are no longer normal}. Instead, if the nonlinearity is weak, these are quasi-normal modes whose main interaction will be dispersive (one mode's frequency depends on the amplitude of another mode's oscillation). 
+
+Quantizing a circuit like this can be performed by using the mode operators as before. The prefactors in the creation/annihilation operators can be obtained by treating the junctions as linear inductors as before. This is always \textit{possible}, but if the nonlinearity is strong it may not be very \textit{useful}. Strong nonlinearity is best treated with other techniques which we will cover in later chapters.
 
 \section{Quantizing a distributed mode}
 \label{sec:distributedQuant}
 The above analysis was all done assuming we had been given a lumped-element circuit model. This is, of course, impossible: a truly lumped element has 0 size and thus cannot exist. It can be a good approximation if the element's size is much less than the wavelength of the fields we are worried about. However, this approximation breaks down if we want a larger element, if we work at a higher frequency, or if we have a transmission line or cavity that is fundamentally a distributed object. In this case there are a few different approaches one can take to circuit quantization. 
 
-\subsection{Energy participation ratio}
-\subsection{Black box quantization}
 \subsection{Lumped oscillator model}
+In practice, the distributed elements we need to worry about will often be transmission line resonators. In that case we can model each resonant mode as a parallel $LC$ circuit. Consider a section of transmission line of length $\ell$ whose ends are either open (infinite impedance to ground) or shorted (0 impedance to ground). If both ends are shorted or both open, then the lowest-frequency resonant mode has wavelength $\lambda$ such that $\ell = \lambda/2$; if one end is shorted and the other is open, $\ell = \lambda/4$. We call these half-wave and quarter-wave resonators, respectively. 
+
+Let's say we have a small capacitor at the end of a resonator, i.e., it is approximately open on that end. To calculate things we care about like coupling strengths, we will need to know the voltage oscillation on the capacitor---that is, the fraction of the total voltage drop that occurs across this capacitor (as opposed to the rest of the distributed capacitance). So any equivalent circuit we use must reproduce this voltage oscillation. It also must contain the same total energy as the transmission line resonator for a given voltage. So we set the voltage on the equivalent circuit to be the same as the voltage at the end of the transmission line, and equate the energies. This gives
+\begin{align*}
+	\frac{1}{2}C_\mathrm{eff} V_0^2 &= \int_0^\ell \frac{1}{2} C^\prime V(x)^2dx
+\end{align*}
+Here $C^\prime$ is the capacitance per unit length of the transmission line. The voltage $V(x)$ varies sinusoidally on the line and is maximum at the end ($x=0$) since the line is approximately open at that end. Plugging this in gives
+
+\begin{align*}
+	\frac{1}{2}C_\mathrm{eff} V_0^2 &= \int_0^\ell \frac{1}{2} C^\prime V_0^2 \cos^2 \frac{2\pi x}{\lambda}dx \\
+	C_\mathrm{eff} &= \int_0^\ell C^\prime \cos^2 \frac{2\pi x}{\lambda}dx \\
+	&= C^\prime \left( \frac{\ell}{2} + \frac{\lambda}{8\pi}\sin\frac{4\pi \ell}{\lambda}\right) \\
+\end{align*}
+Since $\ell = \lambda/2$ or $\lambda/4$, the sine term at the end is 0, and we have
+
+\begin{align*}
+	C_\mathrm{eff} &= \frac{\ell}{2} C^\prime = \frac{\lambda}{2m} C^\prime
+\end{align*}
+
+Where $m=2$ for half-wave and $m=4$ for quarter-wave. This is perhaps not such a surprising result---the average voltage magnitude along the transmission line is half the maximum amplitude, so the effective capacitance is half of the total integrated capacitance along the line.
+
+We may not know the capacitance per unit length precisely, and it's useful to work with frequency instead of wavelength. The wavelength $\lambda$ can be related to the resonant frequency $\omega_0$ as $\lambda = 2 \pi \nu /\omega_0$, where $\nu = 1/\sqrt{L^\prime C^\prime}$ is the speed of light in the transmission line. This gives
+\begin{align}
+	C_\mathrm{eff} &= \frac{2\pi}{2 m \omega_0 \sqrt{L^\prime C^\prime}} C^\prime \notag \\
+	&= \frac{\pi}{m \omega_0} \sqrt{\frac{C^\prime}{L^\prime}} \notag \\
+	C_\mathrm{eff}&= \frac{\pi}{m \omega_0 Z_0}
+\end{align}
+where $Z_0 = \sqrt{L^\prime/C^\prime}$ is the transmission line impedance, a quantity that we are often designing around. One can then set $L_\mathrm{eff}$ so that $1/\sqrt{L_\mathrm{eff} C_\mathrm{eff}} = \omega_0$:
+
+\begin{equation}
+	L^\mathrm{cap}_\mathrm{eff} = \frac{m Z_0}{\pi \omega_0}
+\end{equation}
+
+One can perform the exact same calculation for inductive coupling, setting the current to be sinusoidally varying and maximum at a short. This gives
+\begin{equation}
+	L^\mathrm{ind}_\mathrm{eff} = \frac{\pi Z_0}{m\omega_0}
+\end{equation}
+We can immediately see an inconsistency: $L^\mathrm{cap}_\mathrm{eff} \neq L^\mathrm{ind}_\mathrm{eff}$ ! That is, the effective inductance we get when calculating an equivalent circuit for inductive coupling is different from the one we get when calculating for capacitive coupling. This is not an error in our calculation, rather it is a fundamental limitation of this method. In practice, one typically treats the transmission line as if it has coupling only on one end, finds all the circuit quantities one wants for that end (e.g., coupling strength to a qubit), then does the same on the other end with a new equivalent circuit. This approach breaks down when coupling on either end is strong, as that loads the transmission line and distorts the sinusoidal voltage and current oscillation.
+
+One can find a self-consistent equivalent circuit by modeling the transmission line with the inductive/capacitive couplings on both ends as a black-box network with impedance $Z(\omega)$, then finding an $LC$ circuit with the same coupling inductance/capacitance that best matches this impedance. In practice this method can be more accurate but is still limited, as it cannot perfectly match impedance over a broad frequency range and cannot handle cases such as couplings partway down the transmission line. In that case other approaches are called for.
+
+\subsection{Black box quantization}
+
+\subsection{Energy participation ratio}
 
 \section{Time-dependent drives}
 
