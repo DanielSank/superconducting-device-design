@@ -336,16 +336,96 @@ Consider a circuit with many linear elements and a single Josephson junction. So
 \begin{align}
 	E^\mathrm{JJ} &= E^\mathrm{JJ}_\mathrm{lin} + E^\mathrm{JJ}_\mathrm{nonlin} \\
 	E^\mathrm{JJ}_\mathrm{lin} &= \frac{1}{2}E_J \phi^2 \\
-	E^\mathrm{JJ}_\mathrm{nonlin} &= E_J (1 - \cos\phi - \frac{1}{2}\phi^2)	
+	E^\mathrm{JJ}_\mathrm{nonlin} &= E_J (1 - \cos\phi - \frac{1}{2}\phi^2)	\label{eq:JJnonlin}
 \end{align}
-We haven't done anything fancy here, just added and subtracted $E_J \phi^2/2$, but in doing so we have now defined a linear inductance plus a purely nonlinear element. (DOES THIS HAVE A NAME ALREADY?)
+We haven't done anything fancy here, just added and subtracted $E_J \phi^2/2$, but in doing so we have now defined a linear inductance plus a purely nonlinear element, sometimes called a spider element due to its circuit symbol (FIGURE).
 
-We can remove the nonlinear element and treat the rest of the circuit (including the linear inductance from the JJ) as a \textit{black box} with two ports that the nonlinear element will span. We can then calculate the impedance between these ports $Z(\omega)$. This calculation can be analytical or a simple numerical circuit simulation if the rest of the circuit elements have simple geometries, but in general may require a full-wave electromagnetic simulation of the physical device geometry. 
+We can remove the nonlinear element and treat the rest of the circuit (including the linear inductance from the JJ) as a \textit{black box} with a port that the nonlinear element will span. We can then calculate the impedance across the port $Z(\omega)$. This calculation can be analytical or a simple numerical circuit simulation if the rest of the circuit elements have simple geometries, but in general may require a full-wave electromagnetic simulation of the physical device geometry. 
 
-Once the impedance is known, the black box circuit can be replaced by an equivalent lumped-element circuit network that reproduces the same $Z(\omega)$ across those ports. 
+Once the impedance is known, the black box circuit can be replaced by an equivalent lumped-element circuit network that reproduces the same $Z(\omega)$ across those ports. A simple way to do this is to focus on the resonant modes of the system, which occur at frequencies that correspond to the poles of impedance (the frequencies where $Z(\omega)$ diverges). Equivalently, these are the frequencies at which admittance $Y(\omega) = 1/Z(\omega)$ is zero. Note that if $Z(\omega)$ is not perfectly imaginary---that is, if there is dissipation---then the poles are complex, with the real part corresponding to the resonant frequency and the imaginary part is the half linewidth. Once the poles are found, we can use a technique known as \textit{Foster synthesis} to construct an equivalent circuit. This involves constructing a parallel RLC circuit for each pole (each resonance), with 
+\begin{align*}
+	C_\mathrm{eff} &= \frac{1}{2} \mathrm{Im}(Y^\prime(\omega_m)) \ \ \ \ \ \ Y^\prime(\omega_m)\equiv \frac{\partial Y}{\partial \omega}\bigg\rvert_{\omega_{m}} \\
+	L_\mathrm{eff} &= \frac{1}{\omega_0^2 C_\mathrm{eff}} \\
+	R_\mathrm{eff} &= \frac{1}{\mathrm{Re}(Y(\omega_0))}
+\end{align*}
+Here $\omega_m$ is the frequency of the $m$th pole. These RLC circuits are cascaded in series as shown in FIGURE. The nonlinear spider element is in parallel with the whole chain. 
+
+To handle the quantization of the circuit, let's first assume dissipation is weak and thus set all the resistors to infinity. By arranging the circuits in the way we did, we ensure that each LC corresponds to a normal mode of oscillation and so the node flux across it is also the mode flux of the diagonalized system. We can quantize these modes in the usual way; the flux and charge operators for the $m$th mode are:
+\begin{align*}
+	\hat{\Phi}_m &= \sqrt{\frac{\hbar}{2} Z^\mathrm{eff}_m} (\ahat_m+\adag_m) \\
+	\hat{q}_m &= i\sqrt{\frac{\hbar}{2 Z^\mathrm{eff}_m}} (\ahat_m - \adag_m) \\
+	Z^\mathrm{eff}_m &\equiv \sqrt{\frac{L^\mathrm{eff}_m}{C^\mathrm{eff}_m}} = \frac{2}{\omega_m Y^\prime(\omega_m)}
+\end{align*}
+
+So far so good, but we still haven't handled the spider element (nonlinear part of the JJ) yet. The flux across it is the flux across the entire chain of $M$ LC circuits, which is just the sum of their fluxes:
+\begin{equation*}
+	\hat{\Phi}_J = \sum_{m=1}^M \sqrt{\frac{\hbar}{2} Z^\mathrm{eff}_m} (\ahat_m+\adag_m)
+\end{equation*}
+We then plus this into \cref{eq:JJnonlin} to find the nonlinear part of the Hamiltonian. We see the nonlinear element participates in every mode and thus mixes the mode operators. The cosine potential can be expanded to whatever order one wishes or can be solved numerically, and the full system behavior can be found.
+
+Foster synthesis is not a perfect match for the impedance, and a better one can be achieved using a method known as Brune synthesis (CITE). This requires a much more complicated circuit and so we cover the Foster method here. There is also a danger of BBQ, which is that one must choose how many modes one wants to include; missing a relevant mode may lead to incorrect predictions.
+
+If the modes are weakly nonlinear, then the full linewidth as calculated from the impedance is also the mode decay rate. This allows a simple calculation of how losses in one part of the circuit (e.g., from a port) cause decay of each mode. If the nonlinearity is strong in a mode, then the true mode will be a mixture of two or more linear modes, and their losses must be propagated through carefully. We will discuss this more in REFER TO FLUXONIUM CHAP.
+
+\subsubsection{BBQ with many junctions}
+If there are $N$ JJs, we can separate out their nonlinearity from their linear inductance as before. This leaves us with a system of $N$ spider elements connected to a black box; the system can be viewed as an N-port network. Such a network has an $N\times N$ impedance matrix $\mathbf{Z}$ with elements
+\begin{equation}
+	Z_{ij}(\omega) = \frac{V_i(\omega)}{I_j(\omega)}
+\end{equation}
+That is, the impedance from port $i$ to port $j$ is the voltage at port $i$ divided by the current at port $j$. 
+
+We can pick a single port as our reference and perform Foster synthesis as before; call this the $k$th port. This gives an equivalent circuit as seen by this $k$th junction, which we can use to get its flux operator in terms of mode creation/annihilation operators as before.
+
+To find the other junction fluxes, we use the impedance we defined before:
+\begin{equation*}
+	V_i(\omega) = Z_{ik}(\omega) I_k(\omega) = Z_{ij}(\omega) \frac{V_k(\omega)}{Z_{kk}(\omega)}
+\end{equation*}
+Integrating both sides over time turns the voltages into fluxes:
+\begin{equation}
+	\Phi_i(\omega) = \frac{Z_{ik}(\omega)}{Z_{kk}(\omega)} \Phi_k(\omega)
+\end{equation}
+To find the flux operator we sum over all $M$ modes:
+\begin{equation}
+	\hat{\Phi}_i = \sum_{m=1}^M \frac{Z_{ik}(\omega_m)}{Z_{kk}(\omega_m)}\sqrt{\frac{\hbar}{2}Z^\mathrm{eff}_m} (\ahat_m+\adag_m)
+\end{equation}
+Here $Z^\mathrm{eff}_m$ is defined as it was for a single junction, with the equivalent circuit calculated from port $k$ as before.
+
+Note that the equivalent circuit and the operators constructed this way depend on our choice of reference port. This is akin to a choice of basis in which to construct the operators. It turns out that the final solutions to the Hamiltonian will be the same regardless.
+
 
 \subsection{Energy participation ratio}
+Carefully studying the equations of BBQ can lead to a great insight: the flux operator at the junction is just equal to the sum of mode flux operators weighted by their zero point fluctuations \textit{as seen from that junction}. That is, in dimensionless flux units,
+\begin{equation}
+	\label{eq:EPRfluxsum}
+	\phi_J = \sum_m \phi_{mJ}^\mathrm{ZPF} (\ahat_m + \adag_m)
+\end{equation}
+For any harmonic mode, the fraction of the ground state energy stored in an inductive element is half the total ground state energy. This is proportional to the variance of the flux, i.e. the flux ZPF squared:
+\begin{equation*}
+	E_\mathrm{ind}^\mathrm{ZPF} = \frac{1}{2 E_L} \left(\phi_{mJ}^\mathrm{ZPF}\right)^2 = \frac{1}{2 E_L} \langle \phi^2\rangle = \frac{\hbar \omega_0}{4}
+\end{equation*}
+Here $E_L$ is the inductive energy treating the whole mode as if it has a single inductor (including the JJ linear inductance). We don't necessarily know what $E_L$ is, since the mode can be distributed and involve many elements, but it turns out it won't matter.
 
+If we treat the JJ as a linear inductor with inductive energy $E_J$, then it contributes a zero point energy
+\begin{equation*}
+	E_{mJ}^\mathrm{ZPF} = \frac{1}{2 E_J}\left(\phi_{mJ}^\mathrm{ZPF}\right)^2
+\end{equation*}
+So we can define the \textit{energy participation ratio} $p_{mJ}$, the amount of energy in mode $m$ that is stored in the linear inductance of junction $J$:
+\begin{equation}
+	p_{mJ} \equiv \frac{\hbar \omega / 4}{\left(\phi_{mJ}^\mathrm{ZPF}\right)^2 / 2 E_J}
+\end{equation}
+
+This can be expressed as
+\begin{equation}
+	\label{eq:EPRfluxone}
+	\phi_{mJ}^\mathrm{ZPF} = s_{mJ} \sqrt{p_{mJ}\frac{\hbar \omega_m}{2E_J}}
+\end{equation}
+Here $s_{mJ} = \pm 1$ defines which direction flux across the junction takes in this mode relative to the other inductive elements, $p_{mJ}$---\textit{the energy participation ratio}---is the fraction of the inductive energy of a mode that is stored in the junction, and $E_J$. We use the energy participation ratio as this can be easily calculated from electromagnetic or circuit simulations, where typically the JJ is treated as a linear inductor to find the mode energy distribution.
+
+And...that's it! We just use \cref{eq:EPRfluxone} in \cref{eq:EPRfluxsum} and plug those flux operators into the junction Hamiltonian terms to find the overall Hamiltonian. Note that while this procedure is exact, it is commonly described by then expanding the cosine to low order, which is only valid when nonlinearity is weak. In fact, if nonlinearity is strong then the linear mode operator may not be close to the true modes. But EPR is still a good place to start, especially since often the JJ nonlinearity is only significant in one or two modes.
+
+EPR is very simple and does not rely on ever creating a lumped model of a circuit. It relies only on knowing the energies in each element in a circuit. Participation ratios are straightforward to extract from EM simulations or circuit simulations. The only downside is that every mode of oscillation that has nonzero participation ratio must be found, which for larger systems can lead to a very computationally intensive EM simulation. This also makes it difficult to perform modular simulations, as changing one part of a circuit can change many modes---if there were a lumped model, one could propagate this change through a circuit-level simulation, but without such a model one must perform a new EM simulation. We will discuss these issues more in REFER TO SIM CHAP.
+
+It may be a bit surprising that we can correctly quantize the nonlinear elements using only the energy distribution in a purely linear circuit. The key is that we are treating the nonlinearity as if it is in parallel with the JJ linear inductance (with no external flux threading the virtual ``loop'' between them) so they must have the same flux across them. This makes EPR analysis exact, although one must be careful blindly using formulas \textit{derived from} EPR analysis as those are often derived approximately (e.g. formulas for Kerr shifts that use low-order expansions of the cosine). 
 
 \section{Time-dependent drives}
 
